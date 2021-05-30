@@ -24,9 +24,17 @@ plot(cerealDf$PriceA ~ cerealDf$PriceB, data=cerealDf,
      col=ifelse(cerealDf$Brand.Preference == "A", "limegreen", "red"))
 # NOTE: bad distinction, by price alone
 
+plot(cerealDf$DiscountA, data=cerealDf,
+     col=ifelse(cerealDf$Brand.Preference == "A", "limegreen", "red"))
+# NOTE: **bad** distinction by discount A alone
+
+plot(cerealDf$DiscountB, data=cerealDf,
+     col=ifelse(cerealDf$Brand.Preference == "A", "limegreen", "red"))
+# NOTE: good distinction by discount B alone
+
 plot(cerealDf$DiscountA ~ cerealDf$DiscountB, data=cerealDf,
      col=ifelse(cerealDf$Brand.Preference == "A", "limegreen", "red"))
-# NOTE: good distinction, by discount alone
+# NOTE: good distinction, by discount A vs discount B
 
 plot(cerealDf$DisplayA ~ cerealDf$DisplayB, data=cerealDf, 
      col=ifelse(cerealDf$Brand.Preference == "A", "limegreen", "red"))
