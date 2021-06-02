@@ -123,45 +123,14 @@ legend("topleft", preferences, cex = 1.3, fill = colors)
 #   2. discount percentage
 # we can try linear regression as a start, with loyalty, price and discount
 
-######################### Linear regression:
-mydf$Brand.PreferenceBinary <- ifelse(mydf$Brand.Preference == "A", 1,0) 
-mdl1 <- lm(Brand.PreferenceBinary ~  DiscountAPercent + DiscountBPercent, data = mydf)
-summary(mdl1)
-
 #########################  partitioning 
+
 set.seed(1)
-partition <- createDataPartition(mydf[['Brand.Preference']], p = 0.6, list=FALSE ) # returns the indexes of the train data set.  
+partition <- createDataPartition(mydf[['Brand.Preference']], p = 0.7, list=FALSE ) # returns the indexes of the train data set.  
 training <- mydf[partition,]
 validation <- mydf[-partition,]
 
-#########################  linear model
-lmFit <- train(Brand.PreferenceBinary~., 
-               data = training, 
-               method="lm") # lm means linear model. 
-
-summary(lmFit)
-
-# Predicting using the trained linear model
-lmPred.train <- predict(lmFit)
-lmPred <- predict(lmFit, newdata = validation)
-
-# evaluation the model using forecast. accuracy gives us  ME     RMSE      MAE      MPE     MAPE  
-library(forecast)
-
-accuracy(lmPred.train, training[['Brand.PreferenceBinary']])
-accuracy(lmPred, validation[['Brand.PreferenceBinary']])
-
 ######################### Training classification tree  
-
-library(caret)
-library(party)
-
-partition <- createDataPartition(mydf[['Brand.Preference']], p = 0.6, list=FALSE ) # returns the indexes of the train data set.     
-
-# creating the train data set
-training <- mydf[partition,] 
-validation <- mydf[-partition,] 
-
 
 ctreeFit <- train(Brand.Preference ~ ., 
                   data = training, 
@@ -178,18 +147,7 @@ ctreePred
 
 confusionMatrix(ctreePred, validation$Brand.Preference)
 
-
-
-#####################################
-# Training KNN 
-
-library(caret)
-
-partition <- createDataPartition(mydf[['Brand.Preference']], p = 0.6, list=FALSE ) # returns the indexes of the train data set.    
-
-# creating the train data set
-training <- mydf[partition,]
-validation <- mydf[-partition,]
+###################################### Training KNN 
 
 knnFit <- train(Brand.Preference~., 
                 data = training, 
@@ -202,6 +160,7 @@ knnFit
 # Predict KNN
 knnPred <- predict(knnFit, newdata = validation)
 
-# evaluation 
-## confusion matrix
 confusionMatrix(knnPred, validation$Brand.Preference)
+
+
+# TODO - play with the numbers of validation percentages, posibble KNN values, add variables 
