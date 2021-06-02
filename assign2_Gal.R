@@ -33,8 +33,13 @@ mydf$DiscountBPercent=as.numeric(format(round(mydf$DiscountB/(mydf$DiscountB+myd
 # we want to understand if theres a connection between the discount and the preference
 plot(DiscountAPercent ~ Brand.Preference , data = mydf)
 plot(DiscountBPercent ~ Brand.Preference , data = mydf)
-# conclusion - when the discount percentage for B is higher- customers buy more B. 
-# when the discount for A is higher than B the pref is not definite for A
+discountBMeanPerc <- mean(mydf$DiscountBPercent)
+discountAMeanPerc <- mean(mydf$DiscountAPercent)
+discountBMean <- mean(mydf$DiscountB)
+discountAMean <- mean(mydf$DiscountA)
+# conclusion - the discounts are quite the same
+# conclusion - when the discount percentage for B is high - customers buy more B. 
+# conclusion - the discount percentage of A has no affect on customers pref
 
 # Checking the discount for A relatively to B.
 plot(DiscountA/DiscountB ~ Brand.Preference, data = mydf)
@@ -80,18 +85,123 @@ countBothOnDisplayB <- as.numeric(nrow(mydf[mydf$Brand.Preference == "B" & mydf$
 countNoneOnDisplayB <- as.numeric(nrow(mydf[mydf$Brand.Preference == "B" & mydf$DisplayA == 0 & mydf$DisplayB == 0,]))
 
 colors = c("blue","red")
-whichOnDisplay <-  c("None","Only A","Only B", "Both") 
-preferences <-c("Choose A","Choose B")
+whichOnDisplay <-  c("Only A","Only B", "Both", "None") 
+preferences <-c("% Choose A","% Choose B")
 # Create the matrix of the values.
-Values <- matrix(c(countAOnDisplayA, countBOnDisplayA, countBothOnDisplayA, countNoneOnDisplayA,countAOnDisplayB,countBOnDisplayB,countBothOnDisplayB,countNoneOnDisplayB), nrow = 2, ncol = 4, byrow = TRUE)
+Values <- matrix(c(countAOnDisplayA/(countAOnDisplayA+countAOnDisplayB)*100,
+                   countBOnDisplayA/(countBOnDisplayA+countBOnDisplayB)*100,
+                   countBothOnDisplayA/(countBothOnDisplayA+countBothOnDisplayB)*100,
+                   countNoneOnDisplayA/(countNoneOnDisplayA+countNoneOnDisplayB)*100,
+                   countAOnDisplayB/(countAOnDisplayA+countAOnDisplayB)*100,
+                   countBOnDisplayB/(countBOnDisplayA+countBOnDisplayB)*100,
+                   countBothOnDisplayB/(countBothOnDisplayA+countBothOnDisplayB)*100,
+                   countNoneOnDisplayB/(countNoneOnDisplayA+countNoneOnDisplayB)*100)
+                 , nrow = 2, ncol = 4, byrow = TRUE)
 # Create the bar chart
-barplot(Values, main = "total revenue", names.arg = whichOnDisplay, xlab = "WhichOnDisplay", ylab = "revenue", col = colors)
+barplot(Values, main = "Pref for display", names.arg = whichOnDisplay, xlab = "WhichOnDisplay", ylab = "customer pref", col = colors)
 # Add the legend to the chart
 legend("topleft", preferences, cex = 1.3, fill = colors)
+# conclusion - seems like A is getting the same attention when displaying alone or when nothing is displayed.
+# when none is on the sales shelf - A gets bigger attention. 
+# B is much more dominant when displaying alone
+
+# All conclusions:
+# conclusion - the discounts are quite the same
+# conclusion - when the discount percentage for B is high - customers buy more B. 
+# conclusion - the discount percentage of A has no affect on customers pref
+# conclusion - when the discount for A is higher *than* B, customers buy more A, and vice versa, people looooove higher discounts
+# conclusion - the final price doesnt affect the pref
+# conclusion - The final price doesn`t affect much of the display in sales shelf
+# conclusion - The discount percentage of B a little bit affects the display on the sales shelf, but for A it's not a thing
+# conclusion - seems like A is getting the same attention when displaying alone or when nothing is displayed.
 # conclusion - when none is on the sales shelf - A gets bigger attention. 
-# in the rest of the times, B is much more dominant 
-# conclusion - customers don't like to see A on the sales shelf!
+
+
+# which models can be relevant here? 
+# according to the graphs we saw that the following columns are important:
+#   1. Loyalty
+#   2. discount percentage
+# we can try linear regression as a start, with loyalty, price and discount
+
+######################### Linear regression:
+mydf$Brand.PreferenceBinary <- ifelse(mydf$Brand.Preference == "A", 1,0) 
+mdl1 <- lm(Brand.PreferenceBinary ~  DiscountAPercent + DiscountBPercent, data = mydf)
+summary(mdl1)
+
+#########################  partitioning 
+set.seed(1)
+partition <- createDataPartition(mydf[['Brand.Preference']], p = 0.6, list=FALSE ) # returns the indexes of the train data set.  
+training <- mydf[partition,]
+validation <- mydf[-partition,]
+
+#########################  linear model
+lmFit <- train(Brand.PreferenceBinary~., 
+               data = training, 
+               method="lm") # lm means linear model. 
+
+summary(lmFit)
+
+# Predicting using the trained linear model
+lmPred.train <- predict(lmFit)
+lmPred <- predict(lmFit, newdata = validation)
+
+# evaluation the model using forecast. accuracy gives us  ME     RMSE      MAE      MPE     MAPE  
+library(forecast)
+
+accuracy(lmPred.train, training[['Brand.PreferenceBinary']])
+accuracy(lmPred, validation[['Brand.PreferenceBinary']])
+
+######################### Training classification tree  
+
+library(caret)
+library(party)
+
+partition <- createDataPartition(mydf[['Brand.Preference']], p = 0.6, list=FALSE ) # returns the indexes of the train data set.     
+
+# creating the train data set
+training <- mydf[partition,] 
+validation <- mydf[-partition,] 
+
+
+ctreeFit <- train(Brand.Preference ~ ., 
+                  data = training, 
+                  method="ctree") 
+
+ctreeFit$finalModel
+
+plot(ctreeFit$finalModel, type = "simple")
+
+# Predict regression tree
+
+ctreePred <- predict(ctreeFit, newdata = validation)
+ctreePred
+
+confusionMatrix(ctreePred, validation$Brand.Preference)
 
 
 
+#####################################
+# Training KNN 
 
+library(caret)
+
+partition <- createDataPartition(mydf[['Brand.Preference']], p = 0.6, list=FALSE ) # returns the indexes of the train data set.    
+
+# creating the train data set
+training <- mydf[partition,]
+validation <- mydf[-partition,]
+
+knnFit <- train(Brand.Preference~., 
+                data = training, 
+                method="knn", preProcess=c("scale","center"),
+                tuneGrid   = expand.grid(k = c(1,5,10))) 
+
+
+knnFit
+
+# Predict KNN
+knnPred <- predict(knnFit, newdata = validation)
+
+# evaluation 
+## confusion matrix
+confusionMatrix(knnPred, validation$Brand.Preference)
