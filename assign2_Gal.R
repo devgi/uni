@@ -21,61 +21,77 @@ mydf <-  read.csv("Cereal.csv")
 # so the customer prefers B.
 
 # factoring DisplayA and DisplayB
-mydf$DisplayA= factor(mydf$DisplayA)
-mydf$DisplayB= factor(mydf$DisplayB)
-mydf$Brand.Preference=   factor(mydf$Brand.Preference)
+mydf$DisplayA = factor(mydf$DisplayA)
+mydf$DisplayB = factor(mydf$DisplayB)
+mydf$Brand.Preference = factor(mydf$Brand.Preference)
 
-# adding new column for how much the discount was meaningful 
+# Adding new column for how much the discount percentage
 mydf$DiscountAPercent=as.numeric(format(round(mydf$DiscountA/(mydf$DiscountA+mydf$PriceA)*100, 3)))
 mydf$DiscountBPercent=as.numeric(format(round(mydf$DiscountB/(mydf$DiscountB+mydf$PriceB)*100, 3)))
 
-
-## relation between DiscountAPercent and Brand.Preference
+# Checking relation between DiscountAPercent and Brand.Preference
 # we want to understand if theres a connection between the discount and the preference
 plot(DiscountAPercent ~ Brand.Preference , data = mydf)
-
 plot(DiscountBPercent ~ Brand.Preference , data = mydf)
-#conclusion - when the discount for B is higher- customer buy more B. 
+# conclusion - when the discount percentage for B is higher- customers buy more B. 
+# when the discount for A is higher than B the pref is not definite for A
 
-mydf$DiscountABRel=as.numeric(format(mydf$DiscountAPercent/mydf$DiscountBPercent))
-plot(DiscountABRel ~ Brand.Preference , data = mydf)
+# Checking the discount for A relatively to B.
+plot(DiscountA/DiscountB ~ Brand.Preference, data = mydf)
+plot(DiscountB/DiscountA ~ Brand.Preference, data = mydf)
+# conclusion - when the discount for A is higher than B, customers buy more A, and vice versa, people looooove higher discounts
 
 # The prices are quite similar so does the preference 
 plot(PriceA/PriceB ~ Brand.Preference, data = mydf)
+plot(PriceA ~ Brand.Preference, data = mydf)
+plot(PriceB ~ Brand.Preference, data = mydf)
+# conclusion - the final price doesnt affect the pref
 
-# The more the discount of A is larger than B, then Customers prefer A over B
-plot(DiscountA/DiscountB ~ Brand.Preference, data = mydf)
-# And vice versa
-plot(DiscountB/DiscountA ~ Brand.Preference, data = mydf)
-
-# How is the sales shelf display affect preference?
-plot(mydf$DisplayA , mydf$Brand.Preference )
-
-
-plot(DisplayB ~ Brand.Preference, data = mydf)
-
-
-# The price doesn`t affect much of the display in sales shelf
+# Checking the affect that the price has on the display on the sales shelf
 plot(PriceA ~ DisplayA, data = mydf)
-
-# The price doesn`t affect much of the display in sales shelf
 plot(PriceB ~ DisplayB, data = mydf)
+# conclusion - The final price doesn`t affect much of the display in sales shelf
 
-# The discount percentage of A doesnt affect the displayA
+# checking how the discount percentage of A affects the display on the sales shelf
 plot(DiscountAPercent ~ DisplayA, data = mydf)
-
-# The discount percentage of B a little bit affect the display B
 plot(DiscountBPercent ~ DisplayB, data = mydf)
+# conclusion - The discount percentage of B a little bit affect the display on the sales shelf, but for A it's not a thing
 
-
-# The price doesn`t affect much of the display in sales shelf
-plot(DisplayB ~ DisplayA, data = mydf)
-
-# Loyalty affects preferences.. no shit
+# Loyalty affects preferences.. walla
 plot(LoyaltyA ~ Brand.Preference, data = mydf)
 plot(LoyaltyB ~ Brand.Preference, data = mydf)
 
+#How many times only A was on display and they chose A
+countAOnDisplayA <- as.numeric(nrow(mydf[mydf$Brand.Preference == "A" & mydf$DisplayA == 1 & mydf$DisplayB == 0,]))
+#How many times only B was on display and they chose A
+countBOnDisplayA <- as.numeric(nrow(mydf[mydf$Brand.Preference == "A" & mydf$DisplayB == 1 & mydf$DisplayA == 0,]))
+#How many times both were on display and they chose A 
+countBothOnDisplayA <- as.numeric(nrow(mydf[mydf$Brand.Preference == "A" & mydf$DisplayA == 1 & mydf$DisplayB == 1,]))
+#How many times none were on display and they chose A 
+countNoneOnDisplayA <- as.numeric(nrow(mydf[mydf$Brand.Preference == "A" & mydf$DisplayA == 0 & mydf$DisplayB == 0,]))
 
-mydf$Brand.Preference<- ifelse(mydf$Brand.Preference == "A" , 1,0)
-plot(DisplayA ~ Brand.Preference, data = mydf)
+#How many times only A was on display and they chose B 
+countAOnDisplayB <- as.numeric(nrow(mydf[mydf$Brand.Preference == "B" & mydf$DisplayA == 1 & mydf$DisplayB == 0,]))
+#How many times only B was on display and they chose B 
+countBOnDisplayB <- as.numeric(nrow(mydf[mydf$Brand.Preference == "B" & mydf$DisplayB == 1 & mydf$DisplayA == 0,]))
+#How many times both were on display and they chose B 
+countBothOnDisplayB <- as.numeric(nrow(mydf[mydf$Brand.Preference == "B" & mydf$DisplayA == 1 & mydf$DisplayB == 1,]))
+#How many times none were on display and they chose B 
+countNoneOnDisplayB <- as.numeric(nrow(mydf[mydf$Brand.Preference == "B" & mydf$DisplayA == 0 & mydf$DisplayB == 0,]))
+
+colors = c("blue","red")
+whichOnDisplay <-  c("None","Only A","Only B", "Both") 
+preferences <-c("Choose A","Choose B")
+# Create the matrix of the values.
+Values <- matrix(c(countAOnDisplayA, countBOnDisplayA, countBothOnDisplayA, countNoneOnDisplayA,countAOnDisplayB,countBOnDisplayB,countBothOnDisplayB,countNoneOnDisplayB), nrow = 2, ncol = 4, byrow = TRUE)
+# Create the bar chart
+barplot(Values, main = "total revenue", names.arg = whichOnDisplay, xlab = "WhichOnDisplay", ylab = "revenue", col = colors)
+# Add the legend to the chart
+legend("topleft", preferences, cex = 1.3, fill = colors)
+# conclusion - when none is on the sales shelf - A gets bigger attention. 
+# in the rest of the times, B is much more dominant 
+# conclusion - customers don't like to see A on the sales shelf!
+
+
+
 
