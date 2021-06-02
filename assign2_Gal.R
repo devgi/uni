@@ -31,7 +31,7 @@ mydf$DiscountBPercent=as.numeric(format(round(mydf$DiscountB/(mydf$DiscountB+myd
 
 
 ## relation between DiscountAPercent and Brand.Preference
-# we want to understand if theres a connection between the discount and the prefer
+# we want to understand if theres a connection between the discount and the preference
 plot(DiscountAPercent ~ Brand.Preference , data = mydf)
 
 plot(DiscountBPercent ~ Brand.Preference , data = mydf)
@@ -45,3 +45,37 @@ plot(PriceA/PriceB ~ Brand.Preference, data = mydf)
 
 # The more the discount of A is larger than B, then Customers prefer A over B
 plot(DiscountA/DiscountB ~ Brand.Preference, data = mydf)
+# And vice versa
+plot(DiscountB/DiscountA ~ Brand.Preference, data = mydf)
+
+# How is the sales shelf display affect preference?
+plot(mydf$DisplayA , mydf$Brand.Preference )
+
+
+plot(DisplayB ~ Brand.Preference, data = mydf)
+
+
+# The price doesn`t affect much of the display in sales shelf
+plot(PriceA ~ DisplayA, data = mydf)
+
+# The price doesn`t affect much of the display in sales shelf
+plot(PriceB ~ DisplayB, data = mydf)
+
+# The discount percentage of A doesnt affect the displayA
+plot(DiscountAPercent ~ DisplayA, data = mydf)
+
+# The discount percentage of B a little bit affect the display B
+plot(DiscountBPercent ~ DisplayB, data = mydf)
+
+
+# The price doesn`t affect much of the display in sales shelf
+plot(DisplayB ~ DisplayA, data = mydf)
+
+# Loyalty affects preferences.. no shit
+plot(LoyaltyA ~ Brand.Preference, data = mydf)
+plot(LoyaltyB ~ Brand.Preference, data = mydf)
+
+
+mydf$Brand.Preference<- ifelse(mydf$Brand.Preference == "A" , 1,0)
+plot(DisplayA ~ Brand.Preference, data = mydf)
+
