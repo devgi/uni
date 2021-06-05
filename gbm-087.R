@@ -34,13 +34,14 @@ mydfTest$DiscountBPercentOverAPercent <- mydfTest$DiscountBPercent/mydfTest$Disc
 mydfTest$DiscountAPercentOverBPercentLoyal <- mydfTest$DiscountAPercentOverBPercent ^ mydfTest$LoyaltyA
 mydfTest$DiscountBPercentOverAPercentLoyal <- mydfTest$DiscountBPercentOverAPercent ^ mydfTest$LoyaltyB
 
-#mydfTest$OnlyA <-as.numeric(mydfTest$DisplayA == "1" & mydfTest$DisplayB == "0")
-#mydfTest$OnlyB <-as.numeric(mydfTest$DisplayA == "0" & mydfTest$DisplayB == "1")
-
-#mydfTest$DiscountBPercentOverAPercent <- mydfTest$DiscountBPercent/mydfTest$DiscountAPercent
-
 mydfTest$BothDisplay <- (as.numeric(mydfTest$DisplayA == "1" & mydfTest$DisplayB == "1")) * mydfTest$DiscountAPercentOverBPercent * (mydfTest$LoyaltyA * mydfTest$LoyaltyB)
 mydfTest$NoneDisplay <- (as.numeric(mydfTest$DisplayA == "0" & mydfTest$DisplayB == "0")) * mydfTest$DiscountAPercentOverBPercent * (mydfTest$LoyaltyA * mydfTest$LoyaltyB)
+
+
+mydfTest$OnlyA <-as.numeric(mydfTest$DisplayA == "1" & mydfTest$DisplayB == "0")
+mydfTest$OnlyB <-as.numeric(mydfTest$DisplayA == "0" & mydfTest$DisplayB == "1")
+
+#mydfTest$DiscountBPercentOverAPercent <- mydfTest$DiscountBPercent/mydfTest$DiscountAPercent
 
 #mydfTest$DiscountAPercent <- NULL
 #mydfTest$DiscountBPercent <- NULL
