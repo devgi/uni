@@ -39,14 +39,6 @@ mydfTest$DiscountBPercent <- as.numeric(format(round(mydfTest$DiscountB/(mydfTes
 mydfTest$DiscountAPercentOverBPercent <- mydfTest$DiscountAPercent/mydfTest$DiscountBPercent
 mydfTest$DiscountBPercentOverAPercent <- mydfTest$DiscountBPercent/mydfTest$DiscountAPercent
 
-mydfTest$DiscountAPercentOverBPercentLoyal <- mydfTest$DiscountAPercentOverBPercent * mydfTest$LoyaltyA
-mydfTest$DiscountBPercentOverAPercentLoyal <- mydfTest$DiscountBPercentOverAPercent * mydfTest$LoyaltyB
-
-mydfTest$BothDisplay <- as.numeric(mydfTest$DisplayA == "1" & mydfTest$DisplayB == "1")
-mydfTest$NoneDisplay <- as.numeric(mydfTest$DisplayA == "0" & mydfTest$DisplayB == "0")
-mydfTest$OnlyADisplayed <-as.numeric(mydfTest$DisplayA == "1" & mydfTest$DisplayB == "0")
-mydfTest$OnlyBDisplayed <-as.numeric(mydfTest$DisplayA == "0" & mydfTest$DisplayB == "1")
-
 ############################################## partitioning 
 
 set.seed(1001)
@@ -59,7 +51,7 @@ validation <- mydfTest[-partition,]
 knnFit <- train(Brand.Preference~., 
                 data = training, 
                 method="knn", preProcess=c("scale","center"),
-                tuneGrid   = expand.grid(k = c(1,3, 5,10,13,15,20))) 
+                tuneGrid   = expand.grid(k = c(10,20,25))) 
 
 knnFit
 
@@ -111,7 +103,7 @@ confusionMatrix(cforestPred, validation$Brand.Preference)
 
 plot(PriceA/PriceB ~ Brand.Preference, data = mydfTest)
 
-plot(DiscountAPercentOverBPercent ~ Brand.Preference, data = mydfTest)
+plot(mydfTest$DiscountAPercentOverBPercent ~ Brand.Preference, data = mydfTest)
 plot(DiscountBPercentOverAPercent ~ Brand.Preference, data = mydfTest)
 
 plot(mydfTest$DiscountA ~ mydfTest$LoyaltyA )
