@@ -21,59 +21,31 @@ mydfTest <-  read.csv("Cereal.csv")
 
 mydfTest$DisplayA = factor(mydfTest$DisplayA)
 mydfTest$DisplayB = factor(mydfTest$DisplayB)
-mydfTest$Brand.Preference = factor(mydfTest$Brand.Preference)
-#mydfTest$Household <- NULL 
-
-############################################## Adding new column 
-
-#mydfTest <- mydfTest[ !(mydfTest$Household %in% c(24,89,361,370,448)), ]
-
-mydfTest$ConditionA <- (mydfTest$PriceA <= mydfTest$PriceB) & (mydfTest$DiscountA >= mydfTest$DiscountB) &  (mydfTest$LoyaltyA >= mydfTest$LoyaltyB) & (mydfTest$Brand.Preference == "B")
-mydfTest$ConditionB <- (mydfTest$PriceB <= mydfTest$PriceA) & (mydfTest$DiscountB >= mydfTest$DiscountA) &  (mydfTest$LoyaltyB >= mydfTest$LoyaltyA) & (mydfTest$Brand.Preference == "A")
-
-mydfTest <- mydfTest[ !(mydfTest$ConditionA == TRUE), ]
-mydfTest <- mydfTest[ !(mydfTest$ConditionB == TRUE), ]
-
-mydfTest$ConditionA <- NULL
-mydfTest$ConditionB <- NULL
+mydfTest$Brand.Preference = factor(mydfTest$Brand.Preference) 
 mydfTest$Household <- NULL 
 
+############################################## Remove unwanted rows 
 
-mydfTest$DiscountAPercent=as.numeric(format(round(mydfTest$DiscountA/(mydfTest$DiscountA+mydfTest$PriceA)*100, 3)))
-mydfTest$DiscountBPercent=as.numeric(format(round(mydfTest$DiscountB/(mydfTest$DiscountB+mydfTest$PriceB)*100, 3)))
+ConditionA <- (mydfTest$PriceA <= mydfTest$PriceB) & (mydfTest$DiscountA >= mydfTest$DiscountB) &  (mydfTest$LoyaltyA >= mydfTest$LoyaltyB) & (mydfTest$Brand.Preference == "B")
+ConditionB <- (mydfTest$PriceB <= mydfTest$PriceA) & (mydfTest$DiscountB >= mydfTest$DiscountA) &  (mydfTest$LoyaltyB >= mydfTest$LoyaltyA) & (mydfTest$Brand.Preference == "A")
+
+mydfTest <- mydfTest[ !(ConditionA == TRUE | ConditionB == TRUE), ]
+
+############################################## Adding new columns
+
+mydfTest$DiscountAPercent <- as.numeric(format(round(mydfTest$DiscountA/(mydfTest$DiscountA+mydfTest$PriceA)*100, 3)))
+mydfTest$DiscountBPercent <- as.numeric(format(round(mydfTest$DiscountB/(mydfTest$DiscountB+mydfTest$PriceB)*100, 3)))
 
 mydfTest$DiscountAPercentOverBPercent <- mydfTest$DiscountAPercent/mydfTest$DiscountBPercent
 mydfTest$DiscountBPercentOverAPercent <- mydfTest$DiscountBPercent/mydfTest$DiscountAPercent
-mydfTest$DiscountAPercentOverBPercentLoyal <- mydfTest$DiscountAPercentOverBPercent ^ mydfTest$LoyaltyA
-mydfTest$DiscountBPercentOverAPercentLoyal <- mydfTest$DiscountBPercentOverAPercent ^ mydfTest$LoyaltyB
 
-avgAPRice = var(mydfTest[['PriceA']])# + mydfTest[['DiscountA']])
-avgBPRice = var(mydfTest[['PriceB']])# + mydfTest[['DiscountB']])
+mydfTest$DiscountAPercentOverBPercentLoyal <- mydfTest$DiscountAPercentOverBPercent * mydfTest$LoyaltyA
+mydfTest$DiscountBPercentOverAPercentLoyal <- mydfTest$DiscountBPercentOverAPercent * mydfTest$LoyaltyB
 
-varADiscount = var(mydfTest[['DiscountA']])
-varBDiscount = var(mydfTest[['DiscountB']])
-
-avgADiscount = mean(mydfTest[['DiscountA']])
-avgBDiscount = mean(mydfTest[['DiscountB']])
-
-varALoyal = var(mydfTest[['LoyaltyA']])
-varBLoyal = var(mydfTest[['LoyaltyB']])
-
-
-#mydfTest$TestA <- (mydfTest$LoyaltyA - avgALoyal) / varALoyal
-#mydfTest$TestB <- (mydfTest$LoyaltyB - avgBLoyal) / varBLoyal
-
-mydfTest$BothDisplay <- (as.numeric(mydfTest$DisplayA == "1" & mydfTest$DisplayB == "1")) * mydfTest$DiscountAPercentOverBPercent * (mydfTest$LoyaltyA * mydfTest$LoyaltyB)
-mydfTest$NoneDisplay <- (as.numeric(mydfTest$DisplayA == "0" & mydfTest$DisplayB == "0")) * mydfTest$DiscountAPercentOverBPercent * (mydfTest$LoyaltyA * mydfTest$LoyaltyB)
-
-
-mydfTest$OnlyA <-as.numeric(mydfTest$DisplayA == "1" & mydfTest$DisplayB == "0")
-mydfTest$OnlyB <-as.numeric(mydfTest$DisplayA == "0" & mydfTest$DisplayB == "1")
-
-#mydfTest$DiscountBPercentOverAPercent <- mydfTest$DiscountBPercent/mydfTest$DiscountAPercent
-
-#mydfTest$DiscountAPercent <- NULL
-#mydfTest$DiscountBPercent <- NULL
+mydfTest$BothDisplay <- as.numeric(mydfTest$DisplayA == "1" & mydfTest$DisplayB == "1")
+mydfTest$NoneDisplay <- as.numeric(mydfTest$DisplayA == "0" & mydfTest$DisplayB == "0")
+mydfTest$OnlyADisplayed <-as.numeric(mydfTest$DisplayA == "1" & mydfTest$DisplayB == "0")
+mydfTest$OnlyBDisplayed <-as.numeric(mydfTest$DisplayA == "0" & mydfTest$DisplayB == "1")
 
 ############################################## partitioning 
 
@@ -84,7 +56,6 @@ validation <- mydfTest[-partition,]
 
 ############################################## Training KNN 
 
-
 knnFit <- train(Brand.Preference~., 
                 data = training, 
                 method="knn", preProcess=c("scale","center"),
@@ -92,13 +63,11 @@ knnFit <- train(Brand.Preference~.,
 
 knnFit
 
-# Predict KNN
 knnPred <- predict(knnFit, newdata = validation)
 
 confusionMatrix(knnPred, validation$Brand.Preference)
 
-
-############################################## gbm    
+############################################## Gradient Boosting Machines    
 
 gbm <- train(Brand.Preference~., 
              data = training,
@@ -121,13 +90,10 @@ ctreeFit
 
 plot(ctreeFit$finalModel, type = "simple")
 
-# Predict regression tree
-
 ctreePred <- predict(ctreeFit, newdata = validation)
 ctreePred
 
 confusionMatrix(ctreePred, validation$Brand.Preference)
-
 
 ######################### Training classification forest  
 
@@ -141,48 +107,20 @@ cforestPred
 
 confusionMatrix(cforestPred, validation$Brand.Preference)
 
-
-############################################## Plotting - TODO
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+############################################## Plotting 
 
 plot(PriceA/PriceB ~ Brand.Preference, data = mydfTest)
 
 plot(DiscountAPercentOverBPercent ~ Brand.Preference, data = mydfTest)
 plot(DiscountBPercentOverAPercent ~ Brand.Preference, data = mydfTest)
 
-plot(mydfTest$DiscountBRelToA ~ mydfTest$Brand.Preference )
-plot(mydfTest$DiscountARelToB ~ mydfTest$Brand.Preference )
-
 plot(mydfTest$DiscountA ~ mydfTest$LoyaltyA )
 plot(mydfTest$DiscountB ~ mydfTest$LoyaltyB )
-
-plot(mydfTest$DiscountARelToB ~ mydfTest$LoyaltyA )
-plot(mydfTest$DiscountBRelToA ~ mydfTest$LoyaltyB )
 
 plot(mydfTest$PriceA/mydfTest$PriceB ~ mydfTest$LoyaltyA )
 plot(mydfTest$PriceB/mydfTest$PriceA ~ mydfTest$LoyaltyB )
 
-
 plot( mydfTest$LoyaltyB ~ mydfTest$Brand.Preference )
 plot( mydfTest$LoyaltyA ~ mydfTest$Brand.Preference )
 
-ANotDisplayed <-as.numeric(mydfTest$DisplayA == "0")
-BNotDisplayed <- as.numeric(mydfTest$DisplayB == "0")
 
-plot(ANotDisplayed ~ mydfTest$Brand.Preference )
-plot(mydfTest$PriceB/mydfTest$PriceA ~ mydfTest$LoyaltyB )
