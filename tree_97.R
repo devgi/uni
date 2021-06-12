@@ -26,8 +26,8 @@ mydfTest$Household <- NULL
 
 ############################################## Remove unwanted rows 
 
-ConditionA <- (mydfTest$PriceA <= mydfTest$PriceB) & (mydfTest$DiscountA >= mydfTest$DiscountB) &  (mydfTest$LoyaltyA >= mydfTest$LoyaltyB) & (mydfTest$Brand.Preference == "B")
-ConditionB <- (mydfTest$PriceB <= mydfTest$PriceA) & (mydfTest$DiscountB >= mydfTest$DiscountA) &  (mydfTest$LoyaltyB >= mydfTest$LoyaltyA) & (mydfTest$Brand.Preference == "A")
+ConditionA <- (mydfTest$DisplayA == mydfTest$DisplayB) & (mydfTest$PriceA <= mydfTest$PriceB) & (mydfTest$DiscountA >= mydfTest$DiscountB) &  (mydfTest$LoyaltyA >= mydfTest$LoyaltyB) & (mydfTest$Brand.Preference == "B")
+ConditionB <- (mydfTest$DisplayA == mydfTest$DisplayB) & (mydfTest$PriceB <= mydfTest$PriceA) & (mydfTest$DiscountB >= mydfTest$DiscountA) &  (mydfTest$LoyaltyB >= mydfTest$LoyaltyA) & (mydfTest$Brand.Preference == "A")
 
 mydfTest <- mydfTest[ !(ConditionA == TRUE | ConditionB == TRUE), ]
 
@@ -41,7 +41,7 @@ mydfTest$DiscountBPercentOverAPercent <- mydfTest$DiscountBPercent/mydfTest$Disc
 
 ############################################## partitioning 
 
-set.seed(1001)
+set.seed(3003)
 partition <- createDataPartition(mydfTest[['Brand.Preference']], p = 0.8, list=FALSE ) # returns the indexes of the train data set.  
 training <- mydfTest[partition,]
 validation <- mydfTest[-partition,]
@@ -103,8 +103,11 @@ confusionMatrix(cforestPred, validation$Brand.Preference)
 
 plot(PriceA/PriceB ~ Brand.Preference, data = mydfTest)
 
-plot(mydfTest$DiscountAPercentOverBPercent ~ Brand.Preference, data = mydfTest)
+plot(DiscountAPercentOverBPercent ~ Brand.Preference, data = mydfTest)
 plot(DiscountBPercentOverAPercent ~ Brand.Preference, data = mydfTest)
+
+plot(DiscountAPercent ~ Brand.Preference, data = mydfTest)
+plot(DiscountBPercent ~ Brand.Preference, data = mydfTest)
 
 plot(mydfTest$DiscountA ~ mydfTest$LoyaltyA )
 plot(mydfTest$DiscountB ~ mydfTest$LoyaltyB )
