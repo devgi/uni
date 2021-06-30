@@ -29,7 +29,13 @@ mydfTest$Household <- NULL
 ConditionA <- (mydfTest$DisplayA == mydfTest$DisplayB) & (mydfTest$PriceA <= mydfTest$PriceB) & (mydfTest$DiscountA >= mydfTest$DiscountB) &  (mydfTest$LoyaltyA >= mydfTest$LoyaltyB) & (mydfTest$Brand.Preference == "B")
 ConditionB <- (mydfTest$DisplayA == mydfTest$DisplayB) & (mydfTest$PriceB <= mydfTest$PriceA) & (mydfTest$DiscountB >= mydfTest$DiscountA) &  (mydfTest$LoyaltyB >= mydfTest$LoyaltyA) & (mydfTest$Brand.Preference == "A")
 
-mydfTest <- mydfTest[ !(ConditionA == TRUE | ConditionB == TRUE), ]
+NumberOfRowsConditionA <- dim(mydfTest[ConditionA == TRUE,])[1]
+NumberOfRowsConditionB <- dim(mydfTest[ConditionB == TRUE,])[1]
+
+mydfTest <- mydfTest[ !(ConditionA == TRUE | ConditionB == TRUE),]
+
+sprintf("Found %d rows with Condition A, %d rows with Condition B", NumberOfRowsConditionA, NumberOfRowsConditionB)
+
 
 ############################################## Adding new columns
 
